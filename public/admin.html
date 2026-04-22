@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SEC//CAST — Control Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#080c0a;--bg2:#0d1210;--surface:#0f1512;--surface2:#141c18;
+      --border:#1a2820;--border2:#243529;
+      --green:#00ff88;--green-dim:#00cc6a;--green-dark:#042010;
+      --green-glow:rgba(0,255,136,.07);
+      --red:#ff3c5a;--amber:#ffaa00;
+      --text:#c8ffe0;--muted:#4a7060;
+      --mono:'Share Tech Mono',monospace;--sans:'Rajdhani',sans-serif;
+    }
+    body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+    body::before{
+      content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+      background-image:
+        linear-gradient(rgba(0,255,136,.03) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(0,255,136,.03) 1px,transparent 1px);
+      background-size:48px 48px;
+    }
+    body::after{
+      content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+      background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.06) 3px,rgba(0,0,0,.06) 4px);
+    }
+
+    /* ── Header ── */
+    header{
+      position:sticky;top:0;z-index:50;
+      background:rgba(8,12,10,.96);backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border2);
+    }
+    .header-inner{
+      max-width:1000px;margin:0 auto;padding:0 28px;
+      display:flex;align-items:center;justify-content:space-between;height:58px;
+    }
+    .logo{font-family:var(--mono);font-size:.95rem;color:var(--green);text-shadow:0 0 16px rgba(0,255,136,.4);display:flex;align-items:center;gap:10px;}
+    .logo-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2s infinite;}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+    .badge{padding:2px 8px;border:1px solid var(--border2);border-radius:3px;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;color:var(--amber);}
+    .header-actions{display:flex;align-items:center;gap:8px;}
+    .hbtn{
+      font-family:var(--mono);font-size:.65rem;padding:6px 14px;
+      border-radius:4px;cursor:pointer;letter-spacing:.08em;border:1px solid;
+      transition:all .15s;text-decoration:none;display:inline-block;
+    }
+    .hbtn-ghost{background:transparent;border-color:var(--border2);color:var(--muted);}
+    .hbtn-ghost:hover{border-color:var(--green);color:var(--green);}
+    .hbtn-danger{background:transparent;border-color:rgba(255,60,90,.3);color:var(--red);}
+    .hbtn-danger:hover{background:rgba(255,60,90,.08);}
+
+    /* ── Layout ── */
+    .container{max-width:1000px;margin:0 auto;padding:30px 28px;position:relative;z-index:1;}
+
+    /* ── Stats row ── */
+    .stats-row{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;}
+    .stat-card{
+      background:var(--surface);border:1px solid var(--border2);
+      border-radius:6px;padding:14px 18px;flex:1;min-width:140px;
+    }
+    .stat-card .val{font-family:var(--mono);font-size:1.4rem;color:var(--green);}
+    .stat-card .lbl{font-family:var(--mono);font-size:.55rem;color:var(--muted);letter-spacing:.12em;margin-top:3px;}
+
+    /* ── Upload zone ── */
+    .upload-zone{
+      background:var(--surface);
+      border:1.5px dashed var(--border2);
+      border-radius:8px;padding:38px 28px;text-align:center;
+      margin-bottom:28px;cursor:pointer;
+      transition:border-color .2s,background .2s;
+      position:relative;overflow:hidden;
+    }
+    .upload-zone.drag{border-color:var(--green);background:rgba(0,255,136,.04);}
+    .upload-zone .uz-icon{font-size:2rem;margin-bottom:10px;opacity:.6;}
+    .upload-zone h3{font-family:var(--mono);font-size:.85rem;color:var(--text);margin-bottom:6px;letter-spacing:.05em;}
+    .upload-zone p{font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-bottom:18px;}
+    #file-input{display:none;}
+    .upload-btn{
+      display:inline-block;padding:9px 22px;
+      background:var(--green);color:#000;border:none;border-radius:5px;
+      font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;
+      cursor:pointer;font-weight:700;transition:opacity .15s;
+    }
+    .upload-btn:hover{opacity:.85;}
+    .upload-hint{font-family:var(--mono);font-size:.58rem;color:var(--muted2,#2e4a3a);margin-top:10px;}
+
+    /* Progress */
+    .progress-area{margin-top:14px;display:none;}
+    .progress-area.show{display:block;}
+    .prog-bg{height:4px;background:var(--border2);border-radius:99px;overflow:hidden;}
+    .prog-fill{height:100%;background:var(--green);border-radius:99px;width:0%;transition:width .15s;}
+    .prog-label{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:6px;}
+
+    /* ── Section ── */
+    .section-label{
+      font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;
+      color:var(--muted);margin-bottom:14px;
+      display:flex;align-items:center;gap:12px;
+    }
+    .section-label::after{content:'';flex:1;height:1px;background:var(--border2);}
+
+    /* ── Track list ── */
+    .track-item{
+      background:var(--surface);border:1px solid var(--border);
+      border-left:3px solid transparent;border-radius:6px;
+      padding:13px 18px;display:flex;align-items:center;gap:12px;
+      margin-bottom:6px;transition:border-color .15s;
+    }
+    .track-item:hover{border-left-color:var(--green);background:var(--surface2);}
+
+    .track-icon{
+      width:38px;height:38px;border-radius:6px;flex-shrink:0;
+      background:var(--green-dark);border:1px solid var(--border2);
+      display:flex;align-items:center;justify-content:center;
+    }
+    .track-icon svg{width:16px;height:16px;fill:var(--green);opacity:.6;}
+
+    .track-info{flex:1;min-width:0;}
+    .track-name{font-size:.92rem;font-weight:600;color:#ddf0e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .track-meta{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:3px;display:flex;gap:10px;}
+
+    .del-btn{
+      width:32px;height:32px;border-radius:5px;flex-shrink:0;
+      background:transparent;border:1px solid var(--border2);
+      color:var(--muted);cursor:pointer;font-size:.75rem;
+      display:flex;align-items:center;justify-content:center;
+      transition:all .15s;
+    }
+    .del-btn:hover{background:rgba(255,60,90,.08);border-color:rgba(255,60,90,.3);color:var(--red);}
+
+    .empty{text-align:center;padding:50px;color:var(--muted);font-family:var(--mono);font-size:.72rem;}
+    .loading{text-align:center;padding:40px;color:var(--muted);font-family:var(--mono);font-size:.7rem;}
+    .spinner{width:24px;height:24px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Toast */
+    #toast{
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);
+      background:var(--surface2);border:1px solid var(--border2);color:var(--text);
+      padding:9px 20px;border-radius:5px;font-family:var(--mono);font-size:.7rem;
+      opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:999;
+      letter-spacing:.05em;
+    }
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    #toast.ok{border-color:rgba(0,255,136,.4);color:var(--green);}
+    #toast.err{border-color:rgba(255,60,90,.4);color:var(--red);}
+
+    @media(max-width:600px){
+      .container{padding:20px 14px;}
+      .header-inner{padding:0 14px;}
+      .stats-row{flex-wrap:wrap;}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      [SEC//CAST]
+      <span class="badge">ADMIN</span>
+    </div>
+    <div class="header-actions">
+      <a href="/" class="hbtn hbtn-ghost" target="_blank">VIEW SITE</a>
+      <button class="hbtn hbtn-danger" onclick="logout()">LOGOUT</button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="val" id="stat-count">0</div>
+      <div class="lbl">TOTAL PODCASTS</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="stat-size">0 MB</div>
+      <div class="lbl">STORAGE USED</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--green-dim)">MP3</div>
+      <div class="lbl">SUPPORTED FORMATS</div>
+    </div>
+  </div>
+
+  <!-- Upload zone -->
+  <div class="upload-zone" id="drop-zone">
+    <input type="file" id="file-input" accept="audio/*" multiple>
+    <div class="uz-icon">⬆</div>
+    <h3>UPLOAD PODCAST</h3>
+    <p>Kéo thả file vào đây, hoặc nhấn nút bên dưới</p>
+    <button class="upload-btn" onclick="document.getElementById('file-input').click()">
+      CHỌN FILE
+    </button>
+    <p class="upload-hint">MP3 · WAV · OGG · FLAC · AAC · M4A &nbsp;|&nbsp; MAX 100MB/FILE</p>
+    <div class="progress-area" id="prog-area">
+      <div class="prog-bg"><div class="prog-fill" id="prog-fill"></div></div>
+      <div class="prog-label" id="prog-label">Đang upload...</div>
+    </div>
+  </div>
+
+  <!-- List -->
+  <p class="section-label">DANH SÁCH PODCAST</p>
+  <div id="list">
+    <div class="loading"><div class="spinner"></div><p>ĐANG TẢI...</p></div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+let tracks = [];
+
+async function loadTracks() {
+  const res = await fetch('/api/tracks');
+  const data = await res.json();
+  tracks = data.tracks || [];
+  renderList();
+  document.getElementById('stat-count').textContent = tracks.length;
+  const totalBytes = tracks.reduce((a,t) => a+t.size, 0);
+  document.getElementById('stat-size').textContent =
+    totalBytes>1048576 ? (totalBytes/1048576).toFixed(1)+' MB' : (totalBytes/1024).toFixed(0)+' KB';
+}
+
+function fmtSize(b){ return b>1048576?(b/1048576).toFixed(1)+' MB':(b/1024).toFixed(0)+' KB'; }
+function fmtDate(d){ return new Date(d).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderList() {
+  const el = document.getElementById('list');
+  if (!tracks.length) {
+    el.innerHTML = `<div class="empty">// No podcasts found — upload to begin</div>`;
+    return;
+  }
+  el.innerHTML = tracks.map((t, i) => `
+    <div class="track-item" id="ti-${i}">
+      <div class="track-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+      </div>
+      <div class="track-info">
+        <div class="track-name">EP${String(i+1).padStart(2,'0')} — ${esc(t.displayName)}</div>
+        <div class="track-meta">
+          <span>${fmtSize(t.size)}</span>
+          <span>UPLOADED ${fmtDate(t.uploadedAt)}</span>
+        </div>
+      </div>
+      <button class="del-btn" onclick="deleteTrack(${i})" title="Xóa">✕</button>
+    </div>`).join('');
+}
+
+async function deleteTrack(idx) {
+  const t = tracks[idx];
+  if (!confirm(`Xóa podcast "${t.displayName}"?`)) return;
+  const res = await fetch(`/admin/tracks/${encodeURIComponent(t.filename)}`, {method:'DELETE'});
+  if (res.ok) { toast('[OK] Đã xóa file', 'ok'); loadTracks(); }
+  else toast('[ERROR] Xóa thất bại', 'err');
+}
+
+async function uploadFile(file) {
+  const pa = document.getElementById('prog-area');
+  const pf = document.getElementById('prog-fill');
+  const pl = document.getElementById('prog-label');
+  pa.classList.add('show'); pf.style.width='0%';
+  pl.textContent = `Uploading: ${file.name}`;
+
+  return new Promise((resolve) => {
+    const fd = new FormData(); fd.append('audio', file);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/admin/upload');
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const p = Math.round(e.loaded/e.total*100);
+        pf.style.width = p+'%';
+        pl.textContent = `Uploading: ${file.name} (${p}%)`;
+      }
+    };
+    xhr.onload = () => {
+      const d = JSON.parse(xhr.responseText);
+      resolve(xhr.status===200 ? {ok:true} : {ok:false, err:d.error});
+    };
+    xhr.onerror = () => resolve({ok:false, err:'Network error'});
+    xhr.send(fd);
+  });
+}
+
+async function handleFiles(files) {
+  let ok=0, fail=0;
+  for (const f of files) {
+    const r = await uploadFile(f);
+    r.ok ? ok++ : fail++;
+  }
+  document.getElementById('prog-area').classList.remove('show');
+  document.getElementById('prog-fill').style.width = '0%';
+  if (ok) toast(`[OK] Upload thành công ${ok} file`, 'ok');
+  if (fail) toast(`[ERROR] ${fail} file thất bại`, 'err');
+  loadTracks();
+}
+
+document.getElementById('file-input').addEventListener('change', (e) => {
+  handleFiles([...e.target.files]); e.target.value = '';
+});
+
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('drag'); handleFiles([...e.dataTransfer.files]); });
+
+let toastTimer;
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show '+type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, 3200);
+}
+
+async function logout() {
+  await fetch('/admin/logout', {method:'POST'});
+  window.location.href = '/admin/login';
+}
+
+loadTracks();
+</script>
+</body>
+</html>
